@@ -3,7 +3,6 @@ import FirebaseAuth
 import Firebase
 import FirebaseStorage
 import FirebaseCore
-import FirebaseCoreExtension
 
 struct AuthCredentials {
     let email: String

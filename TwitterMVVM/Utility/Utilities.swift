@@ -44,17 +44,5 @@ class Utilities {
         
         return button
     }
-    
-//    func buttonSettings(name: String, buttonSelector: Selector) -> UIButton {
-//        let button = UIButton(type: .system)
-//        button.setTitle(name, for: .normal)
-//        button.setTitleColor(.twitterBlue, for: .normal)
-//        button.backgroundColor = .white
-//        button.layer.cornerRadius = 5
-//        button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 18)
-//        button.addTarget(self, action: #selector(buttonSelector), for: .touchUpInside)
-//        
-//        return button
-//    }
 }
 

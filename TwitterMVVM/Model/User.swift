@@ -6,21 +6,40 @@
 //
 
 import Foundation
+import FirebaseAuth
 
 struct User {
     let email: String
     let fullname: String
     let username: String
-    let userImageUrl: String
+    var userImageUrl: URL?
     let uid: String
+    var userStats: UserRelationStats?
+    
+    var isFollowed = false
+    
+    var isCurrentUser: Bool {
+        return Auth.auth().currentUser?.uid == uid
+    }
     
     init(uid: String, dictionary: [String: AnyObject]) {
         self.email = dictionary["email"] as? String ?? ""
         self.fullname = dictionary["fullName"] as? String ?? ""
         self.username = dictionary["username"] as? String ?? ""
-        self.userImageUrl = dictionary["userImageUrl"] as? String ?? ""
         
         self.uid = uid
+        
+        if let userImageUrlString = dictionary["userImageUrl"] as? String {
+            guard let url = URL(string: userImageUrlString) else {return}
+            self.userImageUrl = url
+        }
+        
+        
     }
     
+}
+
+struct UserRelationStats {
+    var followers: Int
+    var following: Int
 }

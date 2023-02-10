@@ -10,12 +10,21 @@ import FirebaseAuth
 
 class MainTabBarVC: UITabBarController {
     
-    let actionButton: UIButton = {
+    var user: User? {
+        didSet {
+            guard let nav = viewControllers?[0] as? UINavigationController else {return}
+            guard let feedVC = nav.viewControllers[0] as? FeedVC else {return}
+            
+            feedVC.user = user
+        }
+    }
+        
+    lazy var actionButton: UIButton = {
         let button = UIButton(type: .system)
         button.tintColor = .white
-        button.backgroundColor = .systemBlue
+        button.backgroundColor = .twitterBlue
         button.setImage(UIImage(named: "new_tweet"), for: .normal)
-        button.addTarget(MainTabBarVC.self, action: #selector(actionButtonPressed), for: .touchUpInside)
+        button.addTarget(self, action: #selector(actionButtonPressed), for: .touchUpInside)
         return button
     }()
     
@@ -33,7 +42,10 @@ class MainTabBarVC: UITabBarController {
     //MARK: - API
     
     func fetchUser() {
-        UserService.shared.fetchUser()
+        guard let uid = Auth.auth().currentUser?.uid else {return}
+        UserService.shared.fetchUser(uid: uid) { user in
+            self.user = user
+        }
     }
     
     func authenticateUserAndConfigureUI() {
@@ -61,7 +73,11 @@ class MainTabBarVC: UITabBarController {
     //MARK: - Selectors
     
     @objc func actionButtonPressed() {
-        print("Action button tapped")
+        guard let user = user else {return}
+        let uploadTweetVC = UploadTweetVC(user: user, config: .tweet)
+        let nav = UINavigationController(rootViewController: uploadTweetVC)
+        nav.modalPresentationStyle = .fullScreen
+        present(nav, animated: true)
     }
     
     //MARK: - Functionality
@@ -76,7 +92,7 @@ class MainTabBarVC: UITabBarController {
     }
     
     func configureViewControllers() {
-        let feedNav = templateNavigationController(UIImage(named: "home_unselected"), FeedVC())
+        let feedNav = templateNavigationController(UIImage(named: "home_unselected"), FeedVC(collectionViewLayout: UICollectionViewFlowLayout()))
 
         let exploreNav = templateNavigationController(UIImage(named: "search_unselected"), ExploreVC())
         
