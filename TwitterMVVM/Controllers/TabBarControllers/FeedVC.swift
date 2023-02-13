@@ -30,6 +30,7 @@ class FeedVC: UICollectionViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         configureUI()
+        fetchTweets()
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -37,31 +38,45 @@ class FeedVC: UICollectionViewController {
         navigationController?.navigationBar.barStyle = .default
     }
     
+    //MARK: - Selectors
+    
+    @objc private func refresh() {
+        fetchTweets()
+    }
+    
+    @objc private func userImageTapped() {
+        guard let user = user else {return}
+        let vc = UserProfileVC(user: user)
+        navigationController?.pushViewController(vc, animated: true)
+    }
+    
     //MARK: - API
     
-    fileprivate func checkIfUserLikedTweets(_ tweets: [Tweet]) {
-        for (index,tweet) in tweets.enumerated() {
+    fileprivate func checkIfUserLikedTweets() {
+        self.tweets.forEach { tweet in
             TweetService.shared.checkIfUserLikedTweet(tweet: tweet) { isLiked in
                 guard isLiked == true else {return}
-                self.tweets[index].isLiked = true
+                
+                if let index = self.tweets.firstIndex(where: {$0.tweetId == tweet.tweetId}) {
+                    self.tweets[index].isLiked = true
+                }
             }
         }
     }
     
     func fetchTweets() {
+        collectionView.refreshControl?.beginRefreshing()
+        
         TweetService.shared.fetchTweets { tweets in
-            self.tweets = tweets
-            self.checkIfUserLikedTweets(tweets)
-            
+            self.tweets = tweets.sorted(by: {$0.timestamp > $1.timestamp})
+            self.checkIfUserLikedTweets()
+            self.collectionView.refreshControl?.endRefreshing()
         }
     }
     
     //MARK: - Functionality
     
     func configureUI() {
-        
-        fetchTweets()
-        
         collectionView.register(TweetCell.self, forCellWithReuseIdentifier: "cell")
         collectionView.backgroundColor = .white
         
@@ -71,6 +86,10 @@ class FeedVC: UICollectionViewController {
         imageView.contentMode = .scaleAspectFit
         imageView.setDimensions(width: 44, height: 44)
         navigationItem.titleView = imageView
+        
+        let refreshControl = UIRefreshControl()
+        refreshControl.addTarget(self, action: #selector(refresh), for: .valueChanged)
+        collectionView.refreshControl = refreshControl
     }
     
     func configureLeftBarItem() {
@@ -81,6 +100,10 @@ class FeedVC: UICollectionViewController {
         userImageView.layer.cornerRadius = 36 / 2
         userImageView.layer.masksToBounds = true
         userImageView.sd_setImage(with: user.userImageUrl)
+        
+        let recognizer = UITapGestureRecognizer(target: self, action: #selector(userImageTapped))
+        userImageView.isUserInteractionEnabled = true
+        userImageView.addGestureRecognizer(recognizer)
         
         navigationItem.leftBarButtonItem = UIBarButtonItem(customView: userImageView)
     }
@@ -96,9 +119,9 @@ extension FeedVC {
     
     override func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "cell", for: indexPath) as! TweetCell
+
         cell.delegate = self
         cell.tweet = tweets[indexPath.row]
-        
         
         return cell
     }
@@ -123,6 +146,13 @@ extension FeedVC: UICollectionViewDelegateFlowLayout {
 //MARK: - TweetCellDelegate
 
 extension FeedVC: TweetCellDelegate {
+    func fetchUser(username: String) {
+        UserService.shared.fetchUser(user: username) { user in
+            let vc = UserProfileVC(user: user)
+            self.navigationController?.pushViewController(vc, animated: true)
+        }
+    }
+    
     func likeTapped(cell: TweetCell) {
         guard let tweet = cell.tweet else {return}
         
@@ -132,7 +162,7 @@ extension FeedVC: TweetCellDelegate {
             cell.tweet?.likes = likes
             
             guard !tweet.isLiked else {return}
-            NotificationService.shared.uploadNotification(type: .like, tweet: tweet)
+            NotificationService.shared.uploadNotification(type: .like, tweetId: tweet.tweetId, user: tweet.user)
         }
     }
     

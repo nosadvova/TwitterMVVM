@@ -10,7 +10,7 @@ import UIKit
 private let cellIdentifier = "cell"
 
 protocol ProfileCategoryDelegate: AnyObject {
-    func filterCategory(view: ProfileCategory, indexPath: IndexPath)
+    func filterCategory(view: ProfileCategory, index: Int)
 }
 
 class ProfileCategory: UIView {
@@ -80,7 +80,7 @@ extension ProfileCategory: UICollectionViewDelegate, UICollectionViewDataSource 
     }
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        delegate?.filterCategory(view: self, indexPath: indexPath)
+        delegate?.filterCategory(view: self, index: indexPath.row)
         
         let cell = collectionView.cellForItem(at: indexPath)
         

@@ -35,7 +35,11 @@ class TweetVC: UICollectionViewController {
         super.viewDidLoad()
         configureCollectionView()
         fetchReplies()
-
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        navigationController?.navigationBar.isHidden = false
     }
     
     //MARK: - API
@@ -107,7 +111,14 @@ extension TweetVC: UICollectionViewDelegateFlowLayout {
 
 //MARK: - TweetHeaderDelegate
 
-extension TweetVC: TweetHeaderDelegate {
+extension TweetVC: TweetHeaderDelegate {    
+    func fetchUser(username: String) {
+        UserService.shared.fetchUser(user: username) { user in
+            let vc = UserProfileVC(user: user)
+            self.navigationController?.pushViewController(vc, animated: true)
+        }
+    }
+    
     func actionSheet() {
         var user = self.tweet.user
         if tweet.user.isCurrentUser {
@@ -140,6 +151,5 @@ extension TweetVC: ActionSheetLauncherDelegate {
             print("Delete")
         }
     }
-    
-    
 }
+

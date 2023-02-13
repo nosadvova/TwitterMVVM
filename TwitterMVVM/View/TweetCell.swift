@@ -6,11 +6,14 @@
 //
 
 import UIKit
+import ActiveLabel
 
 protocol TweetCellDelegate: AnyObject {
     func profileImageTapped(cell: TweetCell)
     func replyTapped(cell: TweetCell)
     func likeTapped(cell: TweetCell)
+    
+    func fetchUser(username: String)
 }
 
 class TweetCell: UICollectionViewCell {
@@ -37,14 +40,23 @@ class TweetCell: UICollectionViewCell {
         image.isUserInteractionEnabled = true
         image.addGestureRecognizer(tap)
         
-        
         return image
     }()
     
-    private let captionLabel: UILabel = {
-        let label = UILabel()
+    private let replyLabel: ActiveLabel = {
+        let label = ActiveLabel()
+        label.textColor = .lightGray
+        label.font = UIFont.systemFont(ofSize: 12)
+        
+        return label
+    }()
+    
+    private let captionLabel: ActiveLabel = {
+        let label = ActiveLabel()
         label.font = UIFont.systemFont(ofSize: 14)
         label.numberOfLines = 0
+        label.mentionColor = .twitterBlue
+        label.hashtagColor = .twitterBlue
         
         return label
     }()
@@ -57,41 +69,24 @@ class TweetCell: UICollectionViewCell {
         
         return label
     }()
-    
-    
-    private lazy var shareButton: UIButton = {
-        let button = UIButton()
-        button.setImage(UIImage(named: "share"), for: .normal)
-        button.setDimensions(width: 20, height: 20)
-        button.addTarget(self, action: #selector(shareTapped), for: .touchUpInside)
-        
-        return button
-    }()
-    
-    private lazy var commentButton: UIButton = {
-        let button = UIButton()
-        button.setImage(UIImage(named: "comment"), for: .normal)
-        button.setDimensions(width: 20, height: 20)
-        button.addTarget(self, action: #selector(commentTapped), for: .touchUpInside)
-        
+
+    private lazy var likeButton: UIButton = {
+        let button = createButton(imageName: "like", selectorName: #selector(likeTapped))
         return button
     }()
     
     private lazy var retweetButton: UIButton = {
-        let button = UIButton()
-        button.setImage(UIImage(named: "retweet"), for: .normal)
-        button.setDimensions(width: 20, height: 20)
-        button.addTarget(self, action: #selector(retweetTapped), for: .touchUpInside)
-        
+        let button = createButton(imageName: "retweet", selectorName: #selector(retweetTapped))
         return button
     }()
     
-    private lazy var likeButton: UIButton = {
-        let button = UIButton()
-        button.setImage(UIImage(named: "like"), for: .normal)
-        button.setDimensions(width: 20, height: 20)
-        button.addTarget(self, action: #selector(likeTapped), for: .touchUpInside)
-        
+    private lazy var commentButton: UIButton = {
+        let button = createButton(imageName: "comment", selectorName: #selector(commentTapped))
+        return button
+    }()
+    
+    private lazy var shareButton: UIButton = {
+        let button = createButton(imageName: "share", selectorName: #selector(shareTapped))
         return button
     }()
     
@@ -113,14 +108,22 @@ class TweetCell: UICollectionViewCell {
         addSubview(underline)
         underline.anchor(left: leftAnchor, bottom: safeAreaLayoutGuide.bottomAnchor, right: rightAnchor, height: 1)
         
-        addSubview(userImageView)
-        userImageView.anchor(top: safeAreaLayoutGuide.topAnchor, left: leftAnchor, paddingTop: 10, paddingLeft: 7)
-        
         let labelStack = UIStackView(arrangedSubviews: [userInfoLabel, captionLabel])
-        addSubview(labelStack)
-        labelStack.anchor(top: topAnchor, left: userImageView.rightAnchor, right: rightAnchor, paddingTop: 10, paddingLeft: 10)
         labelStack.axis = .vertical
         labelStack.spacing = 5
+        
+        let imageLabelStack = UIStackView(arrangedSubviews: [userImageView, labelStack])
+        imageLabelStack.axis = .horizontal
+        imageLabelStack.distribution = .fillProportionally
+        imageLabelStack.spacing = 10
+        imageLabelStack.alignment = .leading
+        
+        let stack = UIStackView(arrangedSubviews: [replyLabel, imageLabelStack])
+        addSubview(stack)
+        stack.anchor(top: topAnchor, left: leftAnchor, right: rightAnchor, paddingTop: 10, paddingLeft: 10, paddingRight: 10)
+        stack.axis = .vertical
+        stack.spacing = 8
+        stack.distribution = .fillProportionally
         
         let buttonsStack = UIStackView(arrangedSubviews: [shareButton, commentButton, retweetButton, likeButton])
         addSubview(buttonsStack)
@@ -130,6 +133,7 @@ class TweetCell: UICollectionViewCell {
         buttonsStack.axis = .horizontal
         buttonsStack.tintColor = .darkGray
         
+        handleMentionTapped()
     }
     
     required init?(coder: NSCoder) {
@@ -157,7 +161,7 @@ class TweetCell: UICollectionViewCell {
     @objc func likeTapped() {
         delegate?.likeTapped(cell: self)
     }
-    
+
     //MARK: - Functionality
     
     func configure() {
@@ -165,10 +169,29 @@ class TweetCell: UICollectionViewCell {
         
         let viewModel = TweetViewModel(tweet: tweet)
         
+        replyLabel.isHidden = viewModel.shouldHideReplyLabel
+        replyLabel.text = viewModel.replyText
+        
         userImageView.sd_setImage(with: viewModel.userImageUrl)
         userInfoLabel.attributedText = viewModel.userInfoText
         captionLabel.text = tweet.caption
+        
         likeButton.tintColor = viewModel.likeButtonTintColor
         likeButton.setImage(viewModel.likeButtonImage, for: .normal)
+    }
+    
+    func createButton(imageName: String, selectorName: Selector) -> UIButton {
+        let button = UIButton()
+        button.setDimensions(width: 20, height: 20)
+        button.setImage(UIImage(named: imageName), for: .normal)
+        button.addTarget(self, action: selectorName, for: .touchUpInside)
+        
+        return button
+    }
+    
+    func handleMentionTapped() {
+        captionLabel.handleMentionTap { username in
+            self.delegate?.fetchUser(username: username)
+        }
     }
 }

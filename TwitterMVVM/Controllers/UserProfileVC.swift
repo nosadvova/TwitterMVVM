@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import FirebaseAuth
 
 private let reuseIdentifier = "tweetCell"
 private let headerIdentifier = "headerView"
@@ -16,7 +17,7 @@ class UserProfileVC: UICollectionViewController {
     
     private var user: User
     
-    private var selectedFilter: ProfileCategoryOptions = .tweets {
+    private var selectedCategory: ProfileCategoryOptions = .tweets {
         didSet {collectionView.reloadData()}
     }
     
@@ -25,7 +26,7 @@ class UserProfileVC: UICollectionViewController {
     private var repliedTweets = [Tweet]()
     
     private var currentDataSource: [Tweet] {
-        switch selectedFilter {
+        switch selectedCategory {
         case .tweets:
             return tweets
         case .replies:
@@ -54,12 +55,28 @@ class UserProfileVC: UICollectionViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         configureUI()
+        
         fetchTweets()
+        fetchReplies()
+        fetchLikedTweets()
         fetchUsersStats()
+        
         checkIfUserFollowed()
     }
     
-    //MARK: - Functionality
+    //MARK: - API
+    
+    func fetchLikedTweets() {
+        TweetService.shared.fetchLikes(user: user) { tweets in
+            self.likedTweets = tweets
+        }
+    }
+    
+    func fetchReplies() {
+        TweetService.shared.fetchRepliesForUser(user: user) { tweets in
+            self.repliedTweets = tweets
+        }
+    }
     
     func fetchTweets() {
         TweetService.shared.fetchTweets(user: user) { tweets in
@@ -82,12 +99,16 @@ class UserProfileVC: UICollectionViewController {
         }
     }
     
+    //MARK: - Functionality
+    
     func configureUI() {
+        collectionView.contentInsetAdjustmentBehavior = .never
         collectionView.register(TweetCell.self, forCellWithReuseIdentifier: reuseIdentifier)
         collectionView.register(ProfileHeader.self, forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader, withReuseIdentifier: headerIdentifier)
-        view.backgroundColor = .white
-        collectionView.contentInsetAdjustmentBehavior = .never
-        collectionView.isScrollEnabled = true
+        collectionView.backgroundColor = .white
+        
+        guard let tabHeight = tabBarController?.tabBar.frame.height else {return}
+        collectionView.contentInset.bottom = tabHeight
     }
 }
 
@@ -117,6 +138,11 @@ extension UserProfileVC {
                 
         return cell
     }
+    
+    override func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        let controller = TweetVC(tweet: currentDataSource[indexPath.row])
+        navigationController?.pushViewController(controller, animated: true)
+    }
 }
 
 //MARK: - UICollectionViewDelegateFlowLayout
@@ -124,19 +150,44 @@ extension UserProfileVC {
 extension UserProfileVC: UICollectionViewDelegateFlowLayout {
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, referenceSizeForHeaderInSection section: Int) -> CGSize {
-        return CGSize(width: view.frame.width, height: 300)
+        
+        var height: CGFloat = 300
+
+        if user.bio == nil {
+            height -= 15
+        }
+        return CGSize(width: view.frame.width, height: height)
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        return CGSize(width: view.frame.width, height: 100)
+        let viewModel = TweetViewModel(tweet: currentDataSource[indexPath.row])
+        var height = viewModel.tweetSize(width: view.frame.width).height + 72
+        
+        if currentDataSource[indexPath.row].isReply {
+            height += 25
+        }
+        return CGSize(width: view.frame.width, height: height)
     }
 }
 
 //MARK: - ProfileHeaderDelegate
 
 extension UserProfileVC: ProfileHeaderDelegate {
+    func didSelectCategory(category: ProfileCategoryOptions) {
+        self.selectedCategory = category
+    }
+    
     func editProfileFollowUserTapped(header: ProfileHeader) {
-        guard !user.isCurrentUser else {return}
+        if user.isCurrentUser {
+            let vc = EditProfileVC(user: user)
+            let nav = UINavigationController(rootViewController: vc)
+            
+            vc.delegate = self
+
+            nav.modalPresentationStyle = .fullScreen
+            present(nav, animated: true)
+            return
+        }
                     
         if user.isFollowed {
             UserService.shared.unfollowUser(uid: user.uid) { error, reference in
@@ -156,4 +207,27 @@ extension UserProfileVC: ProfileHeaderDelegate {
     func dismissScreen() {
         navigationController?.popViewController(animated: true)
     }
+}
+
+//MARK: - EditProfileControllerDelegate
+
+extension UserProfileVC: EditProfileControllerDelegate {
+    func handleLogOut() {
+        do {
+           try Auth.auth().signOut()
+            let nav = UINavigationController(rootViewController: LoginVC())
+            nav.modalPresentationStyle = .fullScreen
+            self.present(nav, animated: true)
+        } catch {
+            print("logOut() error")
+        }
+    }
+    
+    func controller(controller: EditProfileVC, updateUser: User) {
+        controller.dismiss(animated: true)
+        self.user = updateUser
+        self.collectionView.reloadData()
+    }
+    
+    
 }

@@ -10,6 +10,7 @@ import UIKit
 protocol ProfileHeaderDelegate: AnyObject {
     func dismissScreen()
     func editProfileFollowUserTapped(header: ProfileHeader)
+    func didSelectCategory(category: ProfileCategoryOptions)
 }
 
 class ProfileHeader: UICollectionReusableView {
@@ -89,7 +90,6 @@ class ProfileHeader: UICollectionReusableView {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 14)
         label.numberOfLines = 3
-        label.text = "My bio here"
         
         return label
     }()
@@ -184,6 +184,7 @@ class ProfileHeader: UICollectionReusableView {
         followingLabel.attributedText = viewModel.following
         fullnameLabel.text = user.fullname
         usernameLabel.text = viewModel.usernameText
+        bioLabel.text = user.bio
         
     }
 }
@@ -192,12 +193,8 @@ class ProfileHeader: UICollectionReusableView {
 //MARK: - ProfileCategoryDelegate
 
 extension ProfileHeader: ProfileCategoryDelegate {
-    func filterCategory(view: ProfileCategory, indexPath: IndexPath) {
-//        guard let cell = view.collectionView.cellForItem(at: indexPath) as? ProfileCategoryCell else {return}
-//        let xPosition = cell.frame.origin.x
-//        
-//        UIView.animate(withDuration: 0.3) {
-//            self.underlineView.frame.origin.x = xPosition
-//        }
+    func filterCategory(view: ProfileCategory, index: Int) {
+        guard let category = ProfileCategoryOptions(rawValue: index) else {return}
+        delegate?.didSelectCategory(category: category)
     }
 }

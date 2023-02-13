@@ -36,6 +36,13 @@ struct UserService {
         })
     }
     
+    func fetchUser(user: String, completion: @escaping (User) -> ()) {
+        DB_REF_USER_USERNAMES.child(user).observeSingleEvent(of: .value) { data in
+            guard let uid = data.value as? String else {return}
+            self.fetchUser(uid: uid, completion: completion)
+        }
+    }
+    
     func followUser(uid: String, completion: @escaping (Error?, DatabaseReference) -> ()) {
         guard let currentUid = Auth.auth().currentUser?.uid else {return}
         
@@ -70,5 +77,31 @@ struct UserService {
                 completion(stats)
             }
         }
+    }
+    
+    func updateUserImage(image: UIImage, completion: @escaping (URL?) -> ()) {
+        guard let imageData = image.jpegData(compressionQuality: 0.3) else {return}
+        guard let uid = Auth.auth().currentUser?.uid else {return}
+        let filename = NSUUID().uuidString
+        let ref = STORAGE_PROFILE_IMAGES.child(filename)
+        
+        ref.putData(imageData) { data, error in
+            ref.downloadURL { url, error in
+                guard let userImageUrl = url?.absoluteString else {return}
+                let values = ["userImageUrl": userImageUrl]
+                
+                DB_REF_USERS.child(uid).updateChildValues(values) { error, reference in
+                    completion(url)
+                }
+            }
+        }
+    }
+    
+    func saveUserData(user: User, completion: @escaping (Error?, DatabaseReference) -> ()) {
+        guard let uid = Auth.auth().currentUser?.uid else {return}
+        
+        let values = ["fullName": user.fullname, "username": user.username, "bio": user.bio ?? ""]
+        
+        DB_REF_USERS.child(uid).updateChildValues(values, withCompletionBlock: completion)
     }
 }

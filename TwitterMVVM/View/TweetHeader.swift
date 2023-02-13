@@ -6,9 +6,11 @@
 //
 
 import UIKit
+import ActiveLabel
 
 protocol TweetHeaderDelegate: AnyObject {
     func actionSheet()
+    func fetchUser(username: String)
 }
 
 class TweetHeader: UICollectionReusableView {
@@ -38,10 +40,18 @@ class TweetHeader: UICollectionReusableView {
         return image
     }()
     
+    private let replyLabel: ActiveLabel = {
+        let label = ActiveLabel()
+        label.textColor = .lightGray
+        label.font = UIFont.systemFont(ofSize: 14)
+        label.mentionColor = .twitterBlue
+        
+        return label
+    }()
+    
     private let fullnameLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 16)
-        label.text = "Name Surname"
         
         return label
     }()
@@ -50,16 +60,16 @@ class TweetHeader: UICollectionReusableView {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 14)
         label.textColor = .systemGray
-        label.text = "username"
         
         return label
     }()
     
-    private let captionLabel: UILabel = {
-        let label = UILabel()
+    private let captionLabel: ActiveLabel = {
+        let label = ActiveLabel()
         label.font = UIFont.systemFont(ofSize: 20)
         label.numberOfLines = 0
-        label.text = "Tweet text long long long textttttt"
+        label.mentionColor = .twitterBlue
+        label.hashtagColor = .twitterBlue
         
         return label
     }()
@@ -69,7 +79,6 @@ class TweetHeader: UICollectionReusableView {
         label.font = UIFont.systemFont(ofSize: 14)
         label.textColor = .systemGray
         label.textAlignment = .left
-        label.text = "19.04.2003"
         
         return label
     }()
@@ -150,7 +159,8 @@ class TweetHeader: UICollectionReusableView {
         super.init(frame: frame)
         
         configureUI()
-        configureTweet()  
+        configureTweet()
+        handleMentionTapped()
     }
     
     required init?(coder: NSCoder) {
@@ -176,7 +186,7 @@ class TweetHeader: UICollectionReusableView {
     }
     
     @objc func likeTapped() {
-        print("like tapped")
+        
     }
     
     @objc func retweetTapped() {
@@ -199,12 +209,16 @@ class TweetHeader: UICollectionReusableView {
         labelsStack.axis = .vertical
         labelsStack.spacing = 1
         
-        let stack = UIStackView(arrangedSubviews: [userImageView, labelsStack])
-        stack.axis = .horizontal
-        stack.spacing = 10
+        let imageLabelStack = UIStackView(arrangedSubviews: [userImageView, labelsStack])
+        imageLabelStack.axis = .horizontal
+        imageLabelStack.spacing = 10
         
+        let stack = UIStackView(arrangedSubviews: [replyLabel, imageLabelStack])
         addSubview(stack)
         stack.anchor(top: topAnchor, left: leftAnchor, paddingTop: 7, paddingLeft: 10)
+        stack.axis = .vertical
+        stack.spacing = 10
+        stack.distribution = .fillProportionally
         
         addSubview(captionLabel)
         captionLabel.anchor(top: stack.bottomAnchor, left: leftAnchor, right: rightAnchor, paddingTop: 20, paddingLeft: 15, paddingRight: 15)
@@ -232,6 +246,9 @@ class TweetHeader: UICollectionReusableView {
         guard let tweet = tweet else {return}
         let viewModel = TweetViewModel(tweet: tweet)
         
+        replyLabel.isHidden = viewModel.shouldHideReplyLabel
+        replyLabel.text = viewModel.replyText
+        
         userImageView.sd_setImage(with: viewModel.userImageUrl)
         fullnameLabel.text = viewModel.user.fullname
         usernameLabel.text = viewModel.usernameText
@@ -254,5 +271,12 @@ class TweetHeader: UICollectionReusableView {
         
         return button
     }
+    
+    func handleMentionTapped() {
+        captionLabel.handleMentionTap { username in
+            self.delegate?.fetchUser(username: username)
+        }
+    }
+
         
 }

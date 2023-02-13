@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import ActiveLabel
 
 enum UploadTweetConfiguration {
     case tweet
@@ -45,17 +46,17 @@ class UploadTweetVC: UIViewController {
         return image
     }()
     
-    private lazy var replyLabel: UILabel = {
-        let label = UILabel()
+    private lazy var replyLabel: ActiveLabel = {
+        let label = ActiveLabel()
         label.font = UIFont.systemFont(ofSize: 14)
         label.textColor = .systemGray
-        label.text = "Replying to someone"
+        label.mentionColor = .twitterBlue
         label.widthAnchor.constraint(equalToConstant: view.frame.width).isActive = true
         
         return label
     }()
     
-    private let tweetTextField = CaptionTextView()
+    private let tweetTextField = InputTextView()
     
     //MARK: - Lifecycle
     
@@ -73,6 +74,7 @@ class UploadTweetVC: UIViewController {
         super.viewDidLoad()
         
         configureUI()
+        handleMentionTapped()
     }
     
     //MARK: - Selectors
@@ -89,7 +91,7 @@ class UploadTweetVC: UIViewController {
             }
             
             if case .reply(let tweet) = self.config {
-                NotificationService.shared.uploadNotification(type: .reply, tweet: tweet)
+                NotificationService.shared.uploadNotification(type: .reply, tweetId: tweet.tweetId, user: tweet.user)
             }
             
             self.dismiss(animated: true)
@@ -137,5 +139,11 @@ class UploadTweetVC: UIViewController {
         
         navigationItem.leftBarButtonItem = UIBarButtonItem(barButtonSystemItem: .cancel, target: self, action: #selector(handleCancel))
         navigationItem.rightBarButtonItem = UIBarButtonItem(customView: tweetButton)
+    }
+    
+    func handleMentionTapped() {
+        replyLabel.handleMentionTap { mention in
+            
+        }
     }
 }

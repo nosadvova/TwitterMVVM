@@ -35,7 +35,6 @@ class MainTabBarVC: UITabBarController {
         
         view.backgroundColor = .twitterBlue
         
-//        logOut()
         authenticateUserAndConfigureUI()
     }
     
@@ -59,14 +58,6 @@ class MainTabBarVC: UITabBarController {
             configureViewControllers()
             configureUI()
             fetchUser()
-        }
-    }
-    
-    func logOut() {
-        do {
-           try Auth.auth().signOut()
-        } catch {
-            print("logOut() error")
         }
     }
     
@@ -98,9 +89,7 @@ class MainTabBarVC: UITabBarController {
         
         let notificationNav = templateNavigationController(UIImage(named: "like_unselected"),NotificationsVC())
         
-        let chatNav = templateNavigationController(UIImage(named: "mail_unselected"), ChatsVC())
-
-        viewControllers = [feedNav, exploreNav, notificationNav, chatNav]
+        viewControllers = [feedNav, exploreNav, notificationNav]
     }
     
     func templateNavigationController(_ image: UIImage?, _ rootViewController: UIViewController) -> UINavigationController {
