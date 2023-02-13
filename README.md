@@ -11,7 +11,7 @@
 - ActiveLabel - implements mentions, hashtags and other functionality.
 
 ## Screenshots
-<img src="./img/logIn.png" width="200" height="400"> <img src="./img/signUp.png" width="200" height="400"> <p>
-<img src="./img/feedVC.png" width="180" height="400"> <img src="./img/reply.png" width="180" height="400"> <img src="./img/tweetVC.png" width="180" height="400"> <img src="./img/uploadTweet.png" width="180" height="400"> <img src="./img/actionMenu.png" width="180" height="400"> <p>
-<img src="./img/explore.png" width="180" height="400"> <img src="./img/notifications.png" width="180" height="400"> <img src="./img/actionMenu.png" width="180" height="400"> <img src="./img/profilevc.png" width="180" height="400"> <img src="./img/editProfile.png" width="180" height="400"> 
+<img src="./img/logIn.png" width="150" height="300"> <img src="./img/signUp.png" width="150" height="300"> <p>
+<img src="./img/feedVC.png" width="150" height="300"> <img src="./img/reply.png" width="150" height="300"> <img src="./img/tweetVC.png" width="150" height="300"> <img src="./img/uploadTweet.png" width="150" height="300"> <img src="./img/actionMenu.png" width="150" height="300"> <p>
+<img src="./img/explore.png" width="150" height="300"> <img src="./img/notifications.png" width="150" height="300"> <img src="./img/actionMenu.png" width="150" height="300"> <img src="./img/profilevc.png" width="150" height="300"> <img src="./img/editProfile.png" width="150" height="300"> 
 
