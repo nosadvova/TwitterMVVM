@@ -11,5 +11,7 @@
 - ActiveLabel - implements mentions, hashtags and other functionality.
 
 ## Screenshots
-![Login screen](./img/login.png) 
-![Example screenshot](./img/signUp.png)
+<img src="./img/logIn.png" width="200" height="400"> <img src="./img/signUp.png" width="200" height="400"> <p>
+<img src="./img/feedVC.png" width="180" height="400"> <img src="./img/reply.png" width="180" height="400"> <img src="./img/tweetVC.png" width="180" height="400"> <img src="./img/uploadTweet.png" width="180" height="400"> <img src="./img/actionMenu.png" width="180" height="400"> <p>
+<img src="./img/explore.png" width="180" height="400"> <img src="./img/notifications.png" width="180" height="400"> <img src="./img/actionMenu.png" width="180" height="400"> <img src="./img/profilevc.png" width="180" height="400"> <img src="./img/editProfile.png" width="180" height="400"> 
+
