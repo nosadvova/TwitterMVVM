@@ -11,4 +11,5 @@
 - ActiveLabel - implements mentions, hashtags and other functionality.
 
 ## Screenshots
-![Example screenshot](./img/screenshot.png)
+![Login screen](./img/login.png) 
+![Example screenshot](./img/signUp.png)
