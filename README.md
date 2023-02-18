@@ -2,6 +2,7 @@
 > The app that built with UIKit, MVVM architecture and Firebase framework. TwitterMVVM has matching features as the original Twitter but with its peculiarities in function and design.
 
 ## General Information
+- The app was made without using storyboards.
 - To create this project I used firebase and additional pods like SDWebImage, ActiveLabel.
 - The general purpose of this project is to show how to efficiently work with API using Firebase.
 
